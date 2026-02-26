@@ -46,6 +46,25 @@ class BookingService {
         }
     }
 
+    public synchronized void cancelTicket(User user, Concert concert, Seat seat) {
+        System.out.println("\n--- Processing Cancellation for " + user.getName() + " ---");
+
+        // 1. Release the seat
+        seat.release();
+
+        // 2. Check the Waiting List for Fairness
+        Queue<User> waitingList = concert.getWaitingList();
+        if (!waitingList.isEmpty()) {
+            User nextInLine = waitingList.poll(); // Get the first person who waited
+            System.out.println("Fairness Check: Offering released seat " + seat.getId() + " to " + nextInLine.getName());
+
+            // 3. Automatically book for the next person
+            bookTicket(nextInLine, concert, seat);
+        } else {
+            System.out.println("Seat " + seat.getId() + " is now available for everyone.");
+        }
+    }
+
     private void processPayment(User user, double amount) {
         System.out.println("Processing payment of $" + amount + " for " + user.getName());
     }

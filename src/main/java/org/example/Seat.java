@@ -22,6 +22,10 @@ class Seat {
         return false;
     }
 
+    public synchronized void release() {
+        this.status = SeatStatus.AVAILABLE;
+    }
+
     public SeatStatus getStatus() {
         return status;
     }

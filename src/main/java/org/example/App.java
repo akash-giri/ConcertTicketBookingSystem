@@ -3,58 +3,63 @@ package org.example;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Hello world!
- *
- */
-public class App 
-{
-    /**
-     * Requirements
-     * The concert ticket booking system should allow users to view
-     * available concerts and their
-     *   seating arrangements.
-     * Users should be able to search for concerts based on various
-     * criteria such as artist, venue,
-     *   date, and time.
-     * Users should be able to select seats and purchase tickets for
-     * a specific concert.
-     * The system should handle concurrent booking requests to avoid
-     * double-booking of seats.
-     * The system should ensure fair booking opportunities for all users.
-     * The system should handle payment processing securely.
-     * The system should generate booking confirmations and send them
-     * to users via email or SMS.
-     * The system should provide a waiting list functionality for
-     * sold-out concerts.
-     * @param args
-     */
-    public static void main( String[] args )
-    {
-        // 1. Setup Data
-        Artist artist = new Artist("A1", "Taylor Swift");
-        List<Seat> seats = new ArrayList<>();
-        seats.add(new Seat("S1", "VIP", 500.0));
-        seats.add(new Seat("S2", "General", 100.0));
-
-        Concert erasTour = new Concert("C1", artist, "Madison Square Garden", "2024-12-01", seats);
-        artist.addConcert(erasTour);
-
+public class App {
+    public static void main(String[] args) {
+        // --- 1. SETUP DATA ---
         BookingService service = new BookingService();
+
+        Artist taylor = new Artist("A1", "Taylor Swift");
+
+        // Creating specific seats
+        Seat s1 = new Seat("S1", "VIP", 500.0);
+        Seat s2 = new Seat("S2", "General", 100.0);
+        List<Seat> seatList = new ArrayList<>();
+        seatList.add(s1);
+        seatList.add(s2);
+
+        Concert erasTour = new Concert("C1", taylor, "Madison Square Garden", "2026-12-01", seatList);
+        taylor.addConcert(erasTour);
         service.addConcert(erasTour);
 
-        User user1 = new User("U1", "Alice", "alice@example.com", "123456789");
-        User user2 = new User("U2", "Bob", "bob@example.com", "987654321");
+        // Setup Users
+        User alice = new User("U1", "Alice", "alice@test.com", "111");
+        User bob = new User("U2", "Bob", "bob@test.com", "222");
+        User charlie = new User("U3", "Charlie", "charlie@test.com", "333");
 
-        // 2. Search Requirement
-        System.out.println("Searching for Taylor Swift concerts...");
-        List<Concert> results = service.search("Taylor Swift", null, null);
-        System.out.println("Found: " + results.size() + " concert(s)");
+        System.out.println("=== WELCOME TO THE CONCERT BOOKING SYSTEM ===\n");
 
-        // 3. Booking Requirement (Concurrency handled inside service)
-        Seat seatToBook = erasTour.getSeats().get(0); // Seat S1
+        // --- 2. SEARCH REQUIREMENT ---
+        System.out.println("Step 1: Searching for concerts by 'Taylor Swift'...");
+        List<Concert> searchResults = service.search("Taylor Swift", null, null);
+        for (Concert c : searchResults) {
+            System.out.println("Found Concert: " + c.getArtist().getName() + " at " + c.getVenue());
+        }
 
-        System.out.println(service.bookTicket(user1, erasTour, seatToBook)); // Success
-        System.out.println(service.bookTicket(user2, erasTour, seatToBook)); // Added to Waiting List (Sold Out)
+        // --- 3. VIEW SEATING ARRANGEMENT ---
+        System.out.println("\nStep 2: Viewing available seats for " + erasTour.getVenue() + "...");
+        service.displayAvailableSeats(erasTour);
+
+        // --- 4. CONCURRENCY & BOOKING ---
+        System.out.println("\nStep 3: Processing bookings for VIP Seat (S1)...");
+
+        // Alice books first
+        System.out.println("Alice Attempt: " + service.bookTicket(alice, erasTour, s1));
+
+        // Bob tries to book the same seat (Should fail and go to Waiting List)
+        System.out.println("Bob Attempt: " + service.bookTicket(bob, erasTour, s1));
+
+        // Charlie tries to book the same seat (Should fail and go to Waiting List behind Bob)
+        System.out.println("Charlie Attempt: " + service.bookTicket(charlie, erasTour, s1));
+
+        // --- 5. FAIRNESS & CANCELLATION ---
+        System.out.println("\nStep 4: Alice cancels her ticket. System should trigger Fairness logic...");
+        // Requirement: Bob is 1st in waiting list, so he should get the seat automatically.
+        service.cancelTicket(alice, erasTour, s1);
+
+        // --- 6. FINAL STATUS CHECK ---
+        System.out.println("\nFinal Status Check:");
+        System.out.println("Is Seat S1 booked? Status: " + s1.getStatus());
+        System.out.println("Remaining people in waiting list: " + erasTour.getWaitingList().size());
+        // Charlie should still be in the waiting list because Bob took Alice's spot.
     }
 }
