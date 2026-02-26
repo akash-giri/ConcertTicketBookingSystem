@@ -8,6 +8,24 @@ class BookingService {
 
     public void addConcert(Concert c) { concerts.add(c); }
 
+    // Step 1: Lock the seat while user enters payment info
+    public String initiateBooking(User user, Seat seat) {
+        if (seat.lock(user.getId(), 5)) { // Lock for 5 minutes
+            return "LOCK_SUCCESS: Seat held for 5 mins. Please pay.";
+        }
+        return "LOCK_FAILED: Seat is taken or already held.";
+    }
+
+    // Step 2: Finalize after payment
+    public String completeBooking(User user, Concert concert, Seat seat) {
+        if (seat.confirmBooking(user.getId())) {
+            processPayment(user, seat.getPrice());
+            sendNotification(user, "Confirmed!");
+            return "BOOKING_COMPLETE";
+        }
+        return "BOOKING_FAILED: Lock expired or unauthorized.";
+    }
+
     // Requirement: Search based on criteria
     public List<Concert> search(String artistName, String venue, String date) {
         return concerts.stream()
