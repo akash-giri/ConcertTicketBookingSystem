@@ -22,6 +22,10 @@ class Seat {
         return false;
     }
 
+    public SeatStatus getStatus() {
+        return status;
+    }
+
     public String getId() {
         return id;
     }

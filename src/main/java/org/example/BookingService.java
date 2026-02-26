@@ -17,6 +17,23 @@ class BookingService {
             .collect(Collectors.toList());
     }
 
+    // view available seat
+    public void displayAvailableSeats(Concert concert) {
+        System.out.println("Available Seats for: " + concert.getId());
+
+        List<Seat> availableSeats = concert.getSeats().stream()
+                .filter(s -> s.getStatus() == SeatStatus.AVAILABLE)
+                .collect(Collectors.toList());
+
+        if (availableSeats.isEmpty()) {
+            System.out.println("No seats available! Join the waiting list?");
+        } else {
+            availableSeats.forEach(s ->
+                    System.out.println("ID: " + s.getId() + " | Type: " + s.getType() + " | Price: $" + s.getPrice())
+            );
+        }
+    }
+
     // Requirement: Handle concurrent booking
     public synchronized String bookTicket(User user, Concert concert, Seat seat) {
         if (seat.reserve()) {
